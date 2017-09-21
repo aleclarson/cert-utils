@@ -1,0 +1,7 @@
+{
+  "name": "csr-gen",
+  "version": "1.0.0",
+  "dependencies": {
+    "assertValid": "aleclarson/assertValid#1.0.0"
+  }
+}
