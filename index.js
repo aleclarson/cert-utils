@@ -101,7 +101,8 @@ module.exports = function generateCsr(options) {
       throw error;
     });
   }, function(error) {
-    fs.unlinkSync(csrPath);
+    confPath && fs.unlinkSync(confPath);
+    fs.unlinkSync(keyPath);
     throw error;
   });
 };
