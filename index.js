@@ -5,6 +5,8 @@ var path = require('path');
 var fs = require('fs');
 var os = require('os');
 
+var DEBUG = /^(1|true)$/.test(process.env.DEBUG);
+
 var optionTypes = {
   der: 'boolean?',
   key: 'string|buffer',
@@ -63,7 +65,9 @@ module.exports = function generateCsr(options) {
     args.push('-subj', subjectString(domains[0], options.subject));
   }
 
-  // Create the CSR.
+  if (DEBUG) {
+    console.log('openssl ' + args.join(' '));
+  }
   return openssl(args).then(function() {
     confPath && fs.unlinkSync(confPath);
     fs.unlinkSync(keyPath);
@@ -80,13 +84,17 @@ module.exports = function generateCsr(options) {
     }
 
     var derPath = tempPath();
-    return openssl([
+    var args = [
       'req',
       '-in', csrPath,
       '-out', derPath,
       '-outform', 'DER',
-    ])
-    .then(function() {
+    ];
+
+    if (DEBUG) {
+      console.log('openssl ' + args.join(' '));
+    }
+    return openssl(args).then(function() {
       try {
         var csr = fs.readFileSync(derPath);
       } catch(error) {
