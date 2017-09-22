@@ -9,14 +9,22 @@ var optionTypes = {
   key: 'string',
   domain: 'string?',
   domains: 'string|array?',
-  subject: {
+  subject: [{
     email: 'string?',
-    country: 'string',
-    state: 'string',
-    city: 'string',
-    company: 'string',
+    country: 'string?',
+    state: 'string?',
+    city: 'string?',
+    company: 'string?',
     division: 'string?',
-  },
+  }, '?'],
+};
+
+var subjectKeys = {
+  country: 'C',
+  state: 'ST',
+  city: 'L',
+  company: 'O',
+  division: 'OU',
 };
 
 module.exports = function generateCsr(options) {
@@ -86,18 +94,16 @@ function tempPath() {
 }
 
 function subjectString(domain, options) {
-  var parts = [
-    '/CN=', domain,
-    '/C=', options.country,
-    '/ST=', options.state,
-    '/L=', options.city,
-    '/O=', options.company,
-  ];
-  if (options.division) {
-    parts.push('/OU=', options.division);
-  }
-  if (options.email) {
-    parts.unshift('/emailAddress=', options.email);
+  var parts = ['/CN=', domain];
+  if (options) {
+    for (var key in subjectKeys) {
+      if (options.hasOwnProperty(key)) {
+        parts.push('/' + subjectKeys[key] + '=' + options[key]);
+      }
+    }
+    if (options.email) {
+      parts.unshift('/emailAddress=', options.email);
+    }
   }
   return parts.join('');
 }
@@ -113,22 +119,22 @@ function createSSLConfig(confPath, domains, options) {
     '',
     '[ dn ]',
     'CN=' + domains[0],
-    'C=' + options.country,
-    'ST=' + options.state,
-    'L=' + options.city,
-    'O=' + options.company,
   ];
-  if (options.division) {
-    parts.push('OU=' + options.division);
-  }
-  if (options.email) {
-    parts.push('emailAddress=' + options.email);
+  if (options) {
+    for (var key in subjectKeys) {
+      if (options.hasOwnProperty(key)) {
+        parts.push(subjectKeys[key] + '=' + options[key]);
+      }
+    }
+    if (options.email) {
+      parts.push('emailAddress=' + options.email);
+    }
   }
   parts.push(
     '[ v3_req ]',
     'subjectAltName=@alt_names',
     '',
-    '[ alt_names ]',
+    '[ alt_names ]'
   );
   domains.forEach(function(domain, index) {
     parts.push('DNS.' + (index + 1) + '=' + domain);
