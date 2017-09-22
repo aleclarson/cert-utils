@@ -7,7 +7,7 @@ var os = require('os');
 
 var optionTypes = {
   der: 'boolean?',
-  key: 'string',
+  key: 'string|buffer',
   domain: 'string?',
   domains: 'string|array?',
   subject: [{
