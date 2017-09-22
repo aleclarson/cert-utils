@@ -6,6 +6,7 @@ var fs = require('fs');
 var os = require('os');
 
 var optionTypes = {
+  der: 'boolean?',
   key: 'string',
   domain: 'string?',
   domains: 'string|array?',
@@ -40,7 +41,7 @@ module.exports = function generateCsr(options) {
     throw Error('Must define `options.domain` or `options.domains`');
   }
 
-  var reqPath = tempPath();
+  var csrPath = tempPath();
   var keyPath = tempPath();
 
   // Store the private key in a temporary file.
@@ -50,7 +51,7 @@ module.exports = function generateCsr(options) {
     'req',
     '-new',
     '-nodes',
-    '-out', reqPath,
+    '-out', csrPath,
     '-key', keyPath,
   ];
 
@@ -64,18 +65,44 @@ module.exports = function generateCsr(options) {
 
   // Create the CSR.
   return openssl(args).then(function() {
-    try {
-      var csr = fs.readFileSync(reqPath);
-    } catch(error) {
-      throw Error('Failed to generate CSR');
+    confPath && fs.unlinkSync(confPath);
+    fs.unlinkSync(keyPath);
+
+    // Skip conversion to DER format unless specified.
+    if (!options.der) {
+      try {
+        var csr = fs.readFileSync(csrPath);
+      } catch(error) {
+        throw Error('Failed to generate CSR in PEM format');
+      }
+      fs.unlinkSync(csrPath);
+      return csr;
     }
 
-    // Remove temporary files.
-    fs.unlinkSync(reqPath);
-    fs.unlinkSync(keyPath);
-    confPath && fs.unlinkSync(confPath);
-
-    return csr;
+    var derPath = tempPath();
+    return openssl([
+      'req',
+      '-in', csrPath,
+      '-out', derPath,
+      '-outform', 'DER',
+    ])
+    .then(function() {
+      try {
+        var csr = fs.readFileSync(derPath);
+      } catch(error) {
+        throw Error('Failed to generate CSR in DER format');
+      }
+      fs.unlinkSync(csrPath);
+      fs.unlinkSync(derPath);
+      return csr;
+    }, function(error) {
+      fs.unlinkSync(csrPath);
+      fs.unlinkSync(derPath);
+      throw error;
+    });
+  }, function(error) {
+    fs.unlinkSync(csrPath);
+    throw error;
   });
 };
 
