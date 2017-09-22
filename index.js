@@ -74,11 +74,7 @@ module.exports = function generateCsr(options) {
 
     // Skip conversion to DER format unless specified.
     if (!options.der) {
-      try {
-        var csr = fs.readFileSync(csrPath);
-      } catch(error) {
-        throw Error('Failed to generate CSR in PEM format');
-      }
+      var csr = fs.readFileSync(csrPath);
       fs.unlinkSync(csrPath);
       return csr;
     }
@@ -95,11 +91,7 @@ module.exports = function generateCsr(options) {
       console.log('openssl ' + args.join(' '));
     }
     return openssl(args).then(function() {
-      try {
-        var csr = fs.readFileSync(derPath);
-      } catch(error) {
-        throw Error('Failed to generate CSR in DER format');
-      }
+      var csr = fs.readFileSync(derPath);
       fs.unlinkSync(csrPath);
       fs.unlinkSync(derPath);
       return csr;
