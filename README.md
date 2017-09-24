@@ -1,10 +1,43 @@
 
-# csr-gen v1.1.0 ![stable](https://img.shields.io/badge/stability-stable-4EBA0F.svg?style=flat)
+# cert-utils v1.2.0 ![stable](https://img.shields.io/badge/stability-stable-4EBA0F.svg?style=flat)
+
+> npm install aleclarson/cert-utils#1.2.0
 
 ```js
-const generateCsr = require('csr-gen');
+const certUtils = require('cert-utils');
+```
 
-generateCsr({
+### certUtils.der(cert)
+
+Convert a certificate to DER format.
+
+```js
+certUtils.der(
+  fs.readFileSync('cert.pem')
+).then(cert => {
+  console.log(cert); // <= `cert` is a Buffer object
+});
+```
+
+### certUtils.req(options)
+
+Generate a CSR in either PEM or DER format.
+
+**Options:**
+- `key: string|buffer` The private key in PEM format
+- `format: string?` The output format (defaults to `PEM`)
+- `domain: string?` The validated domain, overrides `domains`
+- `domains: string|array?` The validated domain(s)
+- `subject: object?` The details embedded in the CSR, all keys are optional strings
+  - `email`
+  - `country`
+  - `state`
+  - `city`
+  - `company`
+  - `division`
+
+```js
+certUtils.req({
   key: fs.readFileSync('key.pem'),
   domain: 'example.com',
   subject: {
@@ -18,17 +51,3 @@ generateCsr({
   console.log(csr); // <= `csr` is a Buffer object
 });
 ```
-
-### Options
-
-- `der: boolean?` Output the CSR in DER format (defaults to `false`)
-- `key: string|buffer` The private key in PEM format (required)
-- `domain: string?` The validated domain, overrides `domains`
-- `domains: string|array?` The validated domain(s)
-- `subject: object?` The details embedded in the CSR, all keys are optional strings
-  - `email`
-  - `country`
-  - `state`
-  - `city`
-  - `company`
-  - `division`
