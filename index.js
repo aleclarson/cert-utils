@@ -33,8 +33,8 @@ exports.der = function certToDer(cert) {
 
 exports.req = (function() {
   var optionTypes = {
-    der: 'boolean?',
     key: 'string|buffer',
+    format: 'string?',
     domain: 'string?',
     domains: 'string|array?',
     subject: [{
@@ -70,6 +70,11 @@ exports.req = (function() {
       throw Error('Must define `options.domain` or `options.domains`');
     }
 
+    var format = options.format || 'PEM';
+    if (/^(DER|PEM)$/.test(format) == false) {
+      throw Error('Unsupported CSR format: ' + format);
+    }
+
     var csrPath = tempPath();
     var keyPath = tempPath();
     fs.writeFileSync(keyPath, options.key);
@@ -98,7 +103,7 @@ exports.req = (function() {
       fs.unlinkSync(keyPath);
 
       // Skip converting to DER format unless specified.
-      if (!options.der) {
+      if (format === 'PEM') {
         var csr = fs.readFileSync(csrPath);
         fs.unlinkSync(csrPath);
         return csr;
@@ -109,7 +114,7 @@ exports.req = (function() {
         'req',
         '-in', csrPath,
         '-out', derPath,
-        '-outform', 'DER',
+        '-outform', format,
       ];
 
       if (DEBUG) {
